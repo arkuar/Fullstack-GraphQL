@@ -1,6 +1,6 @@
-  
 import { gql, useQuery } from '@apollo/client'
 import React from 'react'
+import Birthyear from './Birthyear'
 
 const ALL_AUTHORS = gql`
   query {
@@ -13,7 +13,9 @@ const ALL_AUTHORS = gql`
 `
 
 const Authors = (props) => {
-  const result = useQuery(ALL_AUTHORS)
+  const result = useQuery(ALL_AUTHORS, {
+    pollInterval: 2000
+  })
 
   if (!props.show) {
     return null
@@ -24,7 +26,7 @@ const Authors = (props) => {
   }
 
   const authors = result.data.allAuthors
-  
+
   return (
     <div>
       <h2>authors</h2>
@@ -48,7 +50,7 @@ const Authors = (props) => {
           )}
         </tbody>
       </table>
-
+      <Birthyear authors={authors} />
     </div>
   )
 }
