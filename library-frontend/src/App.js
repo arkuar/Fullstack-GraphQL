@@ -6,7 +6,7 @@ import Books from './components/Books'
 import LoginForm from './components/LoginForm'
 import NewBook from './components/NewBook'
 import Recommended from './components/Recommended'
-import { ALL_AUTHORS, ALL_BOOKS, BOOK_ADDED } from './queries'
+import { ALL_BOOKS, BOOK_ADDED } from './queries'
 
 const Notify = ({ msg }) => {
   if (!msg) {
@@ -24,9 +24,7 @@ const App = () => {
   const [token, setToken] = useState(null)
   const [errorMsg, setErrorMsg] = useState(null)
   const books = useQuery(ALL_BOOKS)
-  const authors = useQuery(ALL_AUTHORS)
   const client = useApolloClient()
-
 
   useEffect(() => {
     const token = localStorage.getItem('user-token')
@@ -86,7 +84,6 @@ const App = () => {
 
         <Authors
           show={page === 'authors'}
-          authors={authors}
         />
 
         <Books
@@ -117,7 +114,6 @@ const App = () => {
 
       <Authors
         show={page === 'authors'}
-        authors={authors}
       />
 
       <Books

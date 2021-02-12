@@ -1,10 +1,10 @@
 import { useLazyQuery, useQuery } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
-import { ALL_BOOKS, USERDATA } from '../queries'
+import { GENRE_BOOKS, USERDATA } from '../queries'
 
 const Recommended = ({ show }) => {
   const result = useQuery(USERDATA)
-  const [getFavorites, favoritesQuery] = useLazyQuery(ALL_BOOKS)
+  const [getFavorites, favoritesQuery] = useLazyQuery(GENRE_BOOKS)
   const [favorites, setFavorites] = useState([])
 
   useEffect(() => {

@@ -1,16 +1,22 @@
+import { useQuery } from '@apollo/client'
 import React from 'react'
+import { ALL_AUTHORS } from '../queries'
 import Birthyear from './Birthyear'
 
-const Authors = ({ show, authors }) => {
-  if (!show) {
+const Authors = (props) => {
+  const result = useQuery(ALL_AUTHORS, {
+    pollInterval: 2000
+  })
+
+  if (!props.show) {
     return null
   }
 
-  if (authors.loading) {
+  if (result.loading) {
     return <div>loading...</div>
   }
 
-  const authorsData = authors.data.allAuthors
+  const authors = result.data.allAuthors
 
   return (
     <div>
@@ -26,7 +32,7 @@ const Authors = ({ show, authors }) => {
               books
             </th>
           </tr>
-          {authorsData.map(a =>
+          {authors.map(a =>
             <tr key={a.name}>
               <td>{a.name}</td>
               <td>{a.born}</td>
@@ -35,7 +41,7 @@ const Authors = ({ show, authors }) => {
           )}
         </tbody>
       </table>
-      <Birthyear authors={authorsData} />
+      <Birthyear authors={authors} />
     </div>
   )
 }

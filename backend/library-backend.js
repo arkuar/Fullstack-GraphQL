@@ -99,13 +99,12 @@ const resolvers = {
       }
       return Book.find({}).populate('author')
     },
-    allAuthors: () => Author.find({}),
+    allAuthors: () => {
+      return Author.find({})
+    },
     me: (root, args, context) => {
       return context.currentUser
     }
-  },
-  Author: {
-    bookCount: (root) => 0
   },
   Mutation: {
     addBook: async (root, args, { currentUser }) => {
@@ -115,9 +114,9 @@ const resolvers = {
 
       let author = await Author.findOne({ name: args.author })
       if (!author) {
-        author = new Author({ name: args.author })
+        author = new Author({ name: args.author, bookCount: 0 })
         try {
-          await author.save()
+         author = await author.save()
         } catch (error) {
           throw new UserInputError(error.message, {
             invalidArgs: args
@@ -127,6 +126,10 @@ const resolvers = {
       const book = new Book({ ...args, author: author._id })
       try {
         await book.save()
+
+        // Increase book count on Author model
+        author.bookCount++
+        await author.save()
       } catch (error) {
         throw new UserInputError(error.message, {
           invalidArgs: args
