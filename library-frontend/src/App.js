@@ -1,11 +1,12 @@
 
-import { useApolloClient } from '@apollo/client'
+import { useApolloClient, useSubscription, useQuery } from '@apollo/client'
 import React, { useState, useEffect } from 'react'
 import Authors from './components/Authors'
 import Books from './components/Books'
 import LoginForm from './components/LoginForm'
 import NewBook from './components/NewBook'
 import Recommended from './components/Recommended'
+import { ALL_AUTHORS, ALL_BOOKS, BOOK_ADDED } from './queries'
 
 const Notify = ({ msg }) => {
   if (!msg) {
@@ -22,7 +23,10 @@ const App = () => {
   const [page, setPage] = useState('authors')
   const [token, setToken] = useState(null)
   const [errorMsg, setErrorMsg] = useState(null)
+  const books = useQuery(ALL_BOOKS)
+  const authors = useQuery(ALL_AUTHORS)
   const client = useApolloClient()
+
 
   useEffect(() => {
     const token = localStorage.getItem('user-token')
@@ -30,6 +34,28 @@ const App = () => {
       setToken(token)
     }
   }, [])
+
+  const updateCacheWith = (addedBook) => {
+    const includeIn = (set, obj) => {
+      set.map(b => b.id).includes(obj.id)
+    }
+
+    const dataInStore = client.readQuery({ query: ALL_BOOKS })
+    if (!includeIn(dataInStore.allBooks, addedBook)) {
+      client.writeQuery({
+        query: ALL_BOOKS,
+        data: { allBooks: dataInStore.allBooks.concat(addedBook) }
+      })
+    }
+  }
+
+  useSubscription(BOOK_ADDED, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      const addedBook = subscriptionData.data.bookAdded
+      notify(`${addedBook.title} added`)
+      updateCacheWith(addedBook)
+    }
+  })
 
   const logout = () => {
     setToken(null)
@@ -60,10 +86,12 @@ const App = () => {
 
         <Authors
           show={page === 'authors'}
+          authors={authors}
         />
 
         <Books
           show={page === 'books'}
+          books={books}
         />
 
         <LoginForm
@@ -85,23 +113,25 @@ const App = () => {
         <button onClick={() => setPage('recommendations')}>recommended</button>
         <button onClick={logout}>logout</button>
       </div>
+      <Notify msg={errorMsg} />
 
       <Authors
         show={page === 'authors'}
+        authors={authors}
       />
 
       <Books
         show={page === 'books'}
+        books={books}
       />
 
       <NewBook
         show={page === 'add'}
       />
 
-      <Recommended 
+      <Recommended
         show={page === 'recommendations'}
       />
-
     </div>
   )
 }

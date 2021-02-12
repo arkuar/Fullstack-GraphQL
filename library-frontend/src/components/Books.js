@@ -1,28 +1,27 @@
 import { useLazyQuery } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
-import { ALL_BOOKS } from '../queries'
+import { GENRE_BOOKS } from '../queries'
 
-const Books = (props) => {
+const Books = ({ show, books }) => {
   const [filter, setFilter] = useState(null)
-  const [books, setBooks] = useState([])
-  const [genres, setGenres] = useState([])
-
-  const [getBooks, booksQuery] = useLazyQuery(ALL_BOOKS, {
-    pollInterval: 2000
+  const [genreBooks, setGenreBooks] = useState(null)
+  const [getBooks, booksQuery] = useLazyQuery(GENRE_BOOKS, {
+    fetchPolicy: 'network-only'
   })
 
   useEffect(() => {
-    getBooks({ variables: { genre: filter } })
+    if (filter) {
+      getBooks({ variables: { genre: filter } })
+    } else {
+      setGenreBooks(null)
+    }
   }, [filter, getBooks])
 
   useEffect(() => {
     if (booksQuery.data) {
-      if (genres.length === 0) {
-        setGenres([...new Set(booksQuery.data.allBooks.flatMap(b => b.genres))])
-      }
-      setBooks(booksQuery.data.allBooks)
+      setGenreBooks(booksQuery.data.allBooks)
     }
-  }, [booksQuery, genres])
+  }, [booksQuery])
 
   const handleClick = (e) => {
     const value = e.target.textContent
@@ -33,13 +32,23 @@ const Books = (props) => {
     }
   }
 
-  if (!props.show) {
+  if (!show) {
     return null
   }
 
-  if (booksQuery.loading) {
+  if (books.loading) {
     return <div>loading...</div>
   }
+
+  const genres = [...new Set(books.data.allBooks.flatMap(b => b.genres))]
+
+  const tableRows = (data) => data.map(a =>
+    <tr key={a.title}>
+      <td>{a.title}</td>
+      <td>{a.author.name}</td>
+      <td>{a.published}</td>
+    </tr>
+  )
 
   return (
     <div>
@@ -60,13 +69,7 @@ const Books = (props) => {
               published
             </th>
           </tr>
-          {books.map(a =>
-            <tr key={a.title}>
-              <td>{a.title}</td>
-              <td>{a.author.name}</td>
-              <td>{a.published}</td>
-            </tr>
-          )}
+          {tableRows(genreBooks || books.data.allBooks)}
         </tbody>
       </table>
       <button onClick={handleClick}>all</button>
